@@ -154,13 +154,11 @@ void BleUart::addDevice(const QBluetoothDeviceInfo &dev)
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
         // macOS and iOS do not expose the hardware address of BLTE devices, must use
         // the OS generated UUID.
-        QString target("UNITY");
-        if (dev.name().contains(target,Qt::CaseInsensitive))
-        {
-            qDebug() << "BLE scan found UNITY device";
+        if (!dev.name().isEmpty()) {
+            qDebug() << "BLE scan found named device";
             mDevs.insert(dev.deviceUuid().toString(), dev.name());
         } else {
-            qDebug() << "BLE ignoring device (not a UNITY)";
+            qDebug() << "BLE scan found unnamed device: " << dev.deviceUuid().toString();
         }
 #else
         mDevs.insert(dev.address().toString(), dev.name());
