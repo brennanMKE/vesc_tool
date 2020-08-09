@@ -1,66 +1,43 @@
 #!/bin/bash
 
-set -e
+build_variant()
+{
+    VARIANT=$1
+    qmake -config release "CONFIG += release_macos build_${VARIANT}"
+    make clean
+    make -j8
+    rm -rf build/macos/obj
+    cd build/macos
+    APP=$(ls | grep vesc_tool | grep .app)
+    if [ -z "${APP}" ]; then
+        echo "error: Mac app not found"
+        exit 1
+    fi
+    zip -r vesc_tool_${VARIANT}_macos.zip "${APP}"
+    ls | grep -v '\.zip$' | xargs rm -rf
+    cd ../..
+}
 
-export PATH=/opt/Qt/5.9-static/bin:$PATH
-rm -rf build/macos/*
+build_variants()
+{
+    set -e
 
-# Original
-qmake -config release "CONFIG += release_macos build_original"
-make clean
-make -j8
-rm -rf build/macos/obj
-cd build/macos
-zip vesc_tool_original_macos.zip `ls | grep -v '\.zip$'`
-ls | grep -v '\.zip$' | xargs rm -rf
-cd ../..
+    VARIANTS="original platinum gold silver bronze free"
 
-# Platinum
-qmake -config release "CONFIG += release_macos build_platinum"
-make clean
-make -j8
-rm -rf build/macos/obj
-cd build/macos
-zip vesc_tool_platinum_macos.zip `ls | grep -v '\.zip$'`
-ls | grep -v '\.zip$' | xargs rm -rf
-cd ../..
+    rm -rf build/macos/*
 
-# Gold
-qmake -config release "CONFIG += release_macos build_gold"
-make clean
-make -j8
-rm -rf build/macos/obj
-cd build/macos
-zip vesc_tool_gold_macos.zip `ls | grep -v '\.zip$'`
-ls | grep -v '\.zip$' | xargs rm -rf
-cd ../..
+    for VARIANT in ${VARIANTS}; do
+        echo "Building ${VARIANT}"
+        build_variant ${VARIANT}
+    done
+}
 
-# Silver
-qmake -config release "CONFIG += release_macos build_silver"
-make clean
-make -j8
-rm -rf build/macos/obj
-cd build/macos
-zip vesc_tool_silver_macos.zip `ls | grep -v '\.zip$'`
-ls | grep -v '\.zip$' | xargs rm -rf
-cd ../..
+QMAKE=$(which qmake)
 
-# Bronze
-qmake -config release "CONFIG += release_macos build_bronze"
-make clean
-make -j8
-rm -rf build/macos/obj
-cd build/macos
-zip vesc_tool_bronze_macos.zip `ls | grep -v '\.zip$'`
-ls | grep -v '\.zip$' | xargs rm -rf
-cd ../..
-
-# Free of charge
-qmake -config release "CONFIG += release_macos build_free"
-make clean
-make -j8
-rm -rf build/macos/obj
-cd build/macos
-zip vesc_tool_free_macos.zip `ls | grep -v '\.zip$'`
-ls | grep -v '\.zip$' | xargs rm -rf
-cd ../..
+if [ -z "${QMAKE}" ]; then
+  echo "error: Qt not found. Install with Brew."
+  echo "brew install qt"
+  exit 1
+else
+  build_variants
+fi

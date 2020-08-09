@@ -57,12 +57,14 @@ BleUart::~BleUart() {
 
 void BleUart::startScan()
 {
+    qDebug() << "BLE scanning started";
     mDevs.clear();
     mDeviceDiscoveryAgent->start();
 }
 
 void BleUart::startConnect(QString addr)
 {
+    qDebug() << "BLE start connect";
     disconnectBle();
 
     mUartServiceFound = false;
@@ -102,6 +104,7 @@ void BleUart::startConnect(QString addr)
 
 void BleUart::disconnectBle()
 {
+    qDebug() << "BLE disconnect";
     if (mService) {
         mService->deleteLater();
         mService = nullptr;
@@ -151,10 +154,16 @@ void BleUart::addDevice(const QBluetoothDeviceInfo &dev)
 #if defined(Q_OS_MACOS) || defined(Q_OS_IOS)
         // macOS and iOS do not expose the hardware address of BLTE devices, must use
         // the OS generated UUID.
-        mDevs.insert(dev.deviceUuid().toString(), dev.name());
+        QString target("UNITY");
+        if (dev.name().contains(target,Qt::CaseInsensitive))
+        {
+            qDebug() << "BLE scan found UNITY device";
+            mDevs.insert(dev.deviceUuid().toString(), dev.name());
+        } else {
+            qDebug() << "BLE ignoring device (not a UNITY)";
+        }
 #else
         mDevs.insert(dev.address().toString(), dev.name());
-
 #endif
 
         emit scanDone(mDevs, false);
